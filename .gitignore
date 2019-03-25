@@ -17,3 +17,5 @@ core
 *.out
 *.toc
 plaut04/doc/userguide.pdf
+*.bbl
+*.blg
