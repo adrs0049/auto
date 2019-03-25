@@ -80,25 +80,25 @@ def type_translation(type):
     return type_translation_dict.get(type,
                                      {"long name" : "Unknown type",
                                       "short name" : "Unknown type"})
-    
+
 def reverse_type_translation(type):
     """A little dictionary to transform human readable strings to types"""
     for k,v in type_translation_dict.items():
         if v["short name"] == type or v["long name"] == type:
             return k
     return type
-    
+
 # The parseB and AUTOBranch classes parse an AUTO fort.7 file
 # THESE EXPECT THE FILE TO HAVE VERY SPECIFIC FORMAT!
 # it provides 4 methods:
 # read and write take as an arguement either and input or output
 #    stream (basically any object with has the method "readline"
 #    for reading and "write" for writing)
-#    
+#
 # readFilename and writeFilename take as an arguement a filename
 #    in which to read/write the parameters (basically it opens the
 #    file and then calles "read" or "write"
-#    
+#
 # Once the data is read in the class provides a list all the points
 # in the fort.7 file.
 
@@ -146,7 +146,7 @@ class parseBMixin(object):
         self.writeRaw(output)
         output.flush()
         output.close()
-        
+
     def writeScreen(self):
         sys.stdout.write(self.summary())
 
@@ -180,7 +180,7 @@ class BDPoint(Points.Point):
         self.branch = branch
         self.section = 0
         self.index = idx
-    
+
     def __getattr__(self, attr):
         if not self.__fullyParsed:
             p = self.p
@@ -368,7 +368,7 @@ class AUTOBranch(parseBMixin, Points.Pointset):
         global N
         # stability gives a list of point numbers where the stability
         # changes: the end point of each part is stored
-        stab = N.concatenate((N.nonzero(N.less(points[:-1]*points[1:],0)),
+        stab = N.concatenate((N.flatnonzero(N.less(points[:-1]*points[1:],0)),
                               [len(points)-1]))
         points = N.less(N.take(points,stab),0)
         stab = stab + 1
@@ -722,7 +722,7 @@ class AUTOBranch(parseBMixin, Points.Pointset):
     def writeRaw(self,output):
         data = self.toArray()
         output.write("\n".join(["".join(["%24.15E"%v for v in d]) for d in data])+"\n")
-                
+
     def write(self, output, columnlen=19):
         if columnlen == 19 and not self.__fullyParsed:
             output.writelines(self.headerlist)
@@ -792,7 +792,7 @@ class AUTOBranch(parseBMixin, Points.Pointset):
             ty_name = type_translation(ty_number)["short name"]
             if ty_name=='RG':
                 ty_name = '  '
-                
+
             if self.__fullyParsed:
                 linelist = (["%4d%6d%4s%5d"%(abs(self.BR),(index % 9999) + 1,
                                              ty_name,label["LAB"])]+
@@ -994,7 +994,7 @@ class parseBR(parseBMixin, UserList):
             return self.__class__(data)
         for d in self.data:
             d.deleteLabel(label,keepTY,keep)
-            
+
     # Relabels the first solution with the given label
     def relabel(self,old_label=None,new_label=None):
         if new_label is None:
@@ -1021,7 +1021,7 @@ class parseBR(parseBMixin, UserList):
                 for k,v in val.items():
                     if v.get("LAB",0) != 0:
                         label = v["LAB"] + 1
-            
+
     # Given a label, return the correct solution
     def getLabel(self,label):
         if isinstance(label, int):
@@ -1169,7 +1169,7 @@ class parseBR(parseBMixin, UserList):
         for d in self.data:
             d.writeRaw(output)
             output.write("\n")
-                
+
     def write(self,output):
         for d in self.data:
             d.write(output)
@@ -1291,8 +1291,8 @@ def AUTOatof(input_string):
             print(input_string)
             print("Setting to 0")
             return 0.0
-            
-            
+
+
 def pointtest(a,b):
     if "TY name" not in a:
         raise AUTOExceptions.AUTORegressionError("No TY label")
@@ -1312,7 +1312,7 @@ def pointtest(a,b):
 def test():
     print("Testing reading from a filename")
     foo = parseB()
-    foo.readFilename("test_data/fort.7")    
+    foo.readFilename("test_data/fort.7")
     if len(foo) != 150:
         raise AUTOExceptions.AUTORegressionError("File length incorrect")
     pointtest(foo.getIndex(0),foo.getIndex(57))
@@ -1336,7 +1336,7 @@ def test():
     new_labels = foo.getLabels()
     if len(labels) != len(new_labels) + 1:
         raise AUTOExceptions.AUTORegressionError("Error in label deletion")
-        
+
     bar = foo.relabel()
     old_labels = foo.getLabels()
     new_labels = bar.getLabels()
