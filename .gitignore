@@ -1,0 +1,13 @@
+*.o
+*.pyc
+*.mod
+Makefile
+bin/*
+cmds/*
+lib
+include/config.h
+config.log
+config.status
+gui/auto.makefile
+tek2ps/tek2ps
+core
