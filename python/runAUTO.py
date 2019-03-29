@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import print_function
 import getopt,sys,os
 import signal
 try:
@@ -127,7 +128,7 @@ class runAUTO:
 
     def __popen(self,args,stdin=None,stderr=None):
         # subprocess.Popen wrapper:
-        return subprocess.Popen(args, stdin=stdin, stdout=subprocess.PIPE, 
+        return subprocess.Popen(args, stdin=stdin, stdout=subprocess.PIPE,
                                 stderr=stderr, bufsize=1,
                                 universal_newlines=True)
 
@@ -290,10 +291,25 @@ class runAUTO:
             raise AUTOExceptions.AUTORuntimeError(
                 "Neither the equation file %s.f90, nor %s.f, nor %s.c exists."%(
                 equation,equation,equation))
+
+        # check if python support is required
+        py=False
+        for ext in [".py"]:
+            if os.path.exists(equation+ext):
+                py=True
+
         # compile
         if not os.path.exists(equation+'.o') or self.__newer([src],
                                                              equation+'.o'):
             if src[-1] == 'c':
+                incdir = ''
+                # if python set we must look up some include paths
+                if py:
+                    from distutils import sysconfig
+                    import numpy as np
+                    incdir = " ".join('-I{}'.format(inc) for inc in [sysconfig.get_python_inc(), np.get_include()])
+                    var['CFLAGS'] = var['CFLAGS'] + ' ' + incdir
+
                 cmd = "%s %s %s -c %s -o %s.o"%(var["CC"],var["CFLAGS"],
                                                 var["OPT"],src,equation)
             else:
@@ -315,16 +331,25 @@ class runAUTO:
             libs = os.path.join(libdir,"*.o")
             deps = glob.glob(libs) + [equation+'.o']
             execfile = equation + ".exe"
+
+        # linking
         if not os.path.exists(execfile) or self.__newer(deps,execfile):
             if src[-1] == 'c':
-                cmd = "%s -L%s %s %s %s.o -o %s %s -lauto_c"%(var["FC"],libdir,
-                                   var["FFLAGS"],var["OPT"],equation,execfile,libs)
+                elibs=['auto_c']
+                if py:
+                    pyVers="{}.{}".format(sys.version_info[0],sys.version_info[1])
+                    elibs.append('python'+pyVers)
+
+                exlibs = ' '.join('-l{}'.format(lib) for lib in elibs)
+                cmd = "%s -L%s %s %s %s.o -o %s %s %s"%(var["FC"],libdir,
+                                   var["FFLAGS"],var["OPT"],equation,execfile,libs,exlibs)
             else:
                 cmd = "%s %s %s %s.o -o %s %s"%(var["FC"],var["FFLAGS"],var["OPT"],
                                                     equation,execfile,libs)
             sys.stdout.write(cmd+"\n")
             cmd = cmd.replace(libs, " ".join(deps[:-1]))
             self.runCommand(cmd)
+
         return os.path.exists(equation+'.exe') and not self.__newer(deps,equation+'.exe')
 
     def load(self,**kw):
@@ -391,7 +416,7 @@ class runAUTO:
         self.__setup()
         self.runMakefile(equation)
         self.__outputCommand()
-    def runMakefile(self,equation=None):        
+    def runMakefile(self,equation=None):
         """     This function expects self.options["dir"] to be a directory with a Makefile in it and
         a equation file all ready to run (i.e. the Makefile does all of the work,
         like with the demos).  Basically it runs:
@@ -428,10 +453,13 @@ class runAUTO:
             self.runExecutable(executable)
             os.environ["PATH"] = path
 
+
     def runExecutableWithSetup(self,executable=None):
         self.__setup()
         self.runExecutable(executable)
         self.__outputCommand()
+
+
     def runExecutable(self,executable=None):
         """     This function expects self.options["dir"] to be a directory with an executable in it and
         a equation file all ready to run.
@@ -451,10 +479,13 @@ class runAUTO:
         self.runCommand(executable)
         os.chdir(curdir)
 
+
     def runCommandWithSetup(self,command=None):
         self.__setup()
         self.runCommand(command,self.options["selected_solution"])
         self.__outputCommand()
+
+
     def runCommand(self,command=None,solution=None):
         """     This is the most generic interface.  It just takes a string as a command
         and tries to run it. """
@@ -626,7 +657,7 @@ def test():
     runner.runDemo("wav")
     stdout.write(log.getvalue()+"\n")
     runner.config(log=None, err=None)
-    
+
 
 if __name__ == "__main__":
     #Parse command line arguements
@@ -643,11 +674,11 @@ if __name__ == "__main__":
     runner = runAUTO()
     if len(args) == 0:
         test()
-    if len(args) == 1:    
+    if len(args) == 1:
         runner.runDemo(args[0],log=log,err=err)
     if len(args) == 2:
         runner.runDemo(args[0],part=args[1],log=log,err=err)
-        
-    
+
+
 
 
