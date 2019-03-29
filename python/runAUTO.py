@@ -310,7 +310,9 @@ class runAUTO:
                     incdir = " ".join('-I{}'.format(inc) for inc in [sysconfig.get_python_inc(), np.get_include()])
                     var['CFLAGS'] = var['CFLAGS'] + ' ' + incdir
 
-                cmd = "%s %s %s -c %s -o %s.o"%(var["CC"],var["CFLAGS"],
+                print('equation:', equation)
+                fileNameMacro='-D__EQN__=\"%s\"' % equation
+                cmd = "%s %s %s %s -c %s -o %s.o"%(var["CC"],fileNameMacro,var["CFLAGS"],
                                                 var["OPT"],src,equation)
             else:
                 cmd = "%s %s %s -c %s -o %s.o"%(var["FC"],var["FFLAGS"],
