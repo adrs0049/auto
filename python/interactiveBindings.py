@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import print_function
 
 import sys
 import os
@@ -23,7 +24,7 @@ class AUTOInteractive(object):
         self.stopdemo = False
         self.oldhelp = __builtin__.help
         locals["help"] = self.help
-        self.atcommands = [cmd 
+        self.atcommands = [cmd
                            for cmd in os.listdir(os.environ["AUTO_DIR"]+"/cmds")
                            if cmd[0]=='@' and cmd[-1]!='~']
 
@@ -112,7 +113,7 @@ Aliases: demofile dmf"""
                 except:
                     self.showtraceback()
                     return
-            else:    
+            else:
                 raise AUTOExceptions.AUTORuntimeError(sys.exc_info()[1])
         self.execfilename = name
         source = ""
@@ -232,7 +233,7 @@ class AUTOInteractiveConsole(AUTOInteractive,code.InteractiveConsole):
             except NameError:
                 theRest = iFun+' '+theRest
                 iFun = ''
-            
+
         return pre,iFun.strip(),theRest
 
     def _ofind(self, oname):
@@ -240,7 +241,7 @@ class AUTOInteractiveConsole(AUTOInteractive,code.InteractiveConsole):
 
         self._ofind(oname) -> obj
         """
-        #shamelessly stolen from IPython        
+        #shamelessly stolen from IPython
         oname = oname.strip()
         # initialize results to 'null'
         found = 0; obj = None;
@@ -277,9 +278,9 @@ class AUTOInteractiveConsole(AUTOInteractive,code.InteractiveConsole):
         # Last try: special-case some literals like '', [], {}, etc:
         if not found and oname_head in ["''",'""','[]','{}','()']:
             obj = eval(oname_head)
-            
+
         return obj
-    
+
 
     def handle_auto(self, pre, iFun, theRest, obj):
         """Handle lines which can be auto-executed, quoting if requested."""
@@ -337,7 +338,7 @@ def adjust_sys_path():
         sys.path.insert(1,os.path.join(os.environ["AUTO_DIR"],"python"))
     else:
         #add current directory to sys.path
-        sys.path.insert(0, "")
+        sys.path.insert(0, os.getcwd())
 
 def test():
     adjust_sys_path()
@@ -355,7 +356,7 @@ def test():
 
 def _quicktest():
     _testFilename("../demos/python/fullTest.auto","test_data/fullTest.log")
-    
+
 def _testFilename(inputname,outputname):
     import AUTOclui, AUTOutil, runAUTO
     old_path = os.getcwd()
@@ -439,7 +440,7 @@ man     -> List of AUTO CLUI commands"""]
 
 def automain(name=None):
     import AUTOclui
-    sys.ps1="AUTO> "    
+    sys.ps1="AUTO> "
     opts_list,args=getopt.getopt(sys.argv[1:],"c:diqtT:L:")
     opts={}
     for x in opts_list:
